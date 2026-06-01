@@ -1,4 +1,4 @@
-from io import BufferedReader, BufferedWriter
+from io import IOBase, BytesIO
 from os import path
 
 import requests
@@ -95,7 +95,7 @@ class WebDAVClient:
 
         return file_listing
     
-    def download_file(self,path:str,fp:BufferedWriter) -> requests.Response: # TODO: maybe get a file constructor and make sure we can get the file
+    def download_file(self,path:str,fp:IOBase) -> requests.Response: # TODO: maybe get a file constructor and make sure we can get the file
         request = self._make_request(
             path = path,
             method = "GET"
@@ -114,7 +114,7 @@ class WebDAVClient:
     def unlock_file(self, path:str):
         pass
 
-    def upload_file(self, path:str, fp:BufferedReader) -> requests.Response:
+    def upload_file(self, path:str, fp:IOBase) -> requests.Response:
         request = self._make_request(
             path = path,
             method = "PUT",
