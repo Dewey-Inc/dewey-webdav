@@ -120,11 +120,20 @@ class WebDAVClient:
     def unlock_file(self, path:str):
         pass
 
-    def upload_file(self, path:str, fp:IOBase) -> requests.Response:
+    def upload_file(self, path:str, fp:IOBase | str | bytes) -> requests.Response:
+        data = b""
+
+        if isinstance(fp, str):
+            data = fp.encode()
+        elif isinstance(fp, bytes):
+            data = fp
+        elif isinstance(fp, IOBase):
+            data = fp.read()
+
         request = self._make_request(
             path = path,
             method = "PUT",
-            body = fp.read()
+            body = data
         )
         assert request.status_code in [200, 201], f"response was \"{request.status_code}\" and not 200 OK (" + request.content.decode()[:25] + ")"
         self._log(request.headers, verbose=True)
