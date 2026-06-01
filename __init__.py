@@ -24,7 +24,7 @@ class WebDAVDirectory(WebDAVFile):
 
 
 class WebDAVClient:
-    def __init__(self,url:str,username:str="",password:str=""):
+    def __init__(self,url:str,username:str="",password:str="", verbose:bool=False):
         self.url = url
         self.username = username
         self.password = password
@@ -32,6 +32,11 @@ class WebDAVClient:
             "User-Agent": "Dewey-WebDAV",
             "Accept": "*/*"
         }
+        self.verbose = verbose
+
+    def _log(self, *args, verbose:bool=False):
+        if (verbose and self.verbose) or not verbose:
+            print(args)
 
     def _create_auth_string(self) -> str:
         if self.username and self.password:
@@ -95,16 +100,17 @@ class WebDAVClient:
 
         return file_listing
     
-    def download_file(self,path:str,fp:IOBase) -> requests.Response: # TODO: maybe get a file constructor and make sure we can get the file
+    def download_file(self,path:str,fp:IOBase | None) -> requests.Response:
         request = self._make_request(
             path = path,
             method = "GET"
         )
         assert request.status_code == 200, f"response was \"{request.status_code}\" and not 200 OK"
 
-        assert fp.writable(), "fp is not writable"
+        if fp:
+            assert fp.writable(), "fp is not writable"
 
-        fp.write(request.content)
+            fp.write(request.content)
 
         return request
 
@@ -121,7 +127,8 @@ class WebDAVClient:
             body = fp.read()
         )
         assert request.status_code in [200, 201], f"response was \"{request.status_code}\" and not 200 OK (" + request.content.decode()[:25] + ")"
-        print(request.headers)
+        self._log(request.headers, verbose=True)
+        self._log(request.content, verbose=True)
 
         return request
 
@@ -131,6 +138,7 @@ class WebDAVClient:
             method = "DELETE",
         )
         assert request.status_code in [200, 201], f"response was \"{request.status_code}\" and not 200 OK (" + request.content.decode()[:25] + ")"
-        print(request.headers)
+        self._log(request.headers, verbose=True)
+        self._log(request.content, verbose=True)
 
         return request
